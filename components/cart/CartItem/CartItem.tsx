@@ -3,10 +3,17 @@ import cn from 'classnames'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Trash, Plus, Minus } from '@components/icons'
-import usePrice from '@bigcommerce/storefront-data-hooks/use-price'
-import useUpdateItem from '@bigcommerce/storefront-data-hooks/cart/use-update-item'
-import useRemoveItem from '@bigcommerce/storefront-data-hooks/cart/use-remove-item'
+import usePrice from '@framework/use-price'
+import useUpdateItem from '@framework/cart/use-update-item'
+import useRemoveItem from '@framework/cart/use-remove-item'
 import s from './CartItem.module.css'
+
+type ItemOption = {
+  name: string,
+  nameId: number,
+  value: string,
+  valueId: number
+}
 
 const CartItem = ({
   item,
@@ -88,24 +95,34 @@ const CartItem = ({
       <div className="flex-1 flex flex-col text-base">
         {/** TODO: Replace this. No `path` found at Cart */}
         <Link href={`/product/${item.url.split('/')[3]}`}>
-          <span className="font-bold mb-5 text-lg cursor-pointer">
+          <span className="font-bold text-lg cursor-pointer leading-6">
             {item.name}
           </span>
         </Link>
-
-        <div className="flex items-center">
+        {item.options && item.options.length > 0 ? (
+          <div className="">
+            {item.options.map((option:ItemOption, i: number) =>
+              <span key={`${item.id}-${option.name}`} className="text-sm font-semibold text-accents-7">
+                {option.value}{ i === item.options.length -1 ? "" : ", " }
+              </span>
+            )}
+          </div>
+        ) : null}
+        <div className="flex items-center mt-3">
           <button type="button" onClick={() => increaseQuantity(-1)}>
             <Minus width={18} height={18} />
           </button>
-          <input
-            type="number"
-            max={99}
-            min={0}
-            className={s.quantity}
-            value={quantity}
-            onChange={handleQuantity}
-            onBlur={handleBlur}
-          />
+          <label>
+            <input
+              type="number"
+              max={99}
+              min={0}
+              className={s.quantity}
+              value={quantity}
+              onChange={handleQuantity}
+              onBlur={handleBlur}
+            />
+          </label>
           <button type="button" onClick={() => increaseQuantity(1)}>
             <Plus width={18} height={18} />
           </button>

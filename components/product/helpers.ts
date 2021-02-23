@@ -1,4 +1,4 @@
-import type { ProductNode } from '@bigcommerce/storefront-data-hooks/api/operations/get-product'
+import type { ProductNode } from '@framework/api/operations/get-product'
 
 export type SelectedOptions = {
   size: string | null
@@ -32,8 +32,10 @@ export function getProductOptions(product: ProductNode) {
 export function getCurrentVariant(product: ProductNode, opts: SelectedOptions) {
   const variant = product.variants.edges?.find((edge) => {
     const { node } = edge ?? {}
+    const numberOfDefinedOpts = Object.values(opts).filter(value => value !== null).length;
+    const numberOfEdges = node?.productOptions?.edges?.length;
 
-    return Object.entries(opts).every(([key, value]) =>
+    const isEdgeEqualToOption = ([key, value]:[string, string | null]) =>
       node?.productOptions.edges?.find((edge) => {
         if (
           edge?.node.__typename === 'MultipleChoiceOption' &&
@@ -43,9 +45,12 @@ export function getCurrentVariant(product: ProductNode, opts: SelectedOptions) {
             (valueEdge) => valueEdge?.node.label === value
           )
         }
-      })
-    )
+      });
+
+    return numberOfDefinedOpts === numberOfEdges ?
+      Object.entries(opts).every(isEdgeEqualToOption)
+      : Object.entries(opts).some(isEdgeEqualToOption)
   })
 
-  return variant
+  return variant ?? product.variants.edges?.[0]
 }

@@ -2,13 +2,12 @@ import { FC, useState } from 'react'
 import cn from 'classnames'
 import Link from 'next/link'
 import Image from 'next/image'
-import type { WishlistItem } from '@bigcommerce/storefront-data-hooks/api/wishlist'
-import usePrice from '@bigcommerce/storefront-data-hooks/use-price'
-import useRemoveItem from '@bigcommerce/storefront-data-hooks/wishlist/use-remove-item'
-import useAddItem from '@bigcommerce/storefront-data-hooks/cart/use-add-item'
+import type { WishlistItem } from '@framework/api/wishlist'
+import usePrice from '@framework/use-price'
+import useRemoveItem from '@framework/wishlist/use-remove-item'
+import useAddItem from '@framework/cart/use-add-item'
 import { useUI } from '@components/ui/context'
-import { Button } from '@components/ui'
-import { HTMLContent } from '@components/core'
+import { Button, Text } from '@components/ui'
 import { Trash } from '@components/icons'
 import s from './WishlistCard.module.css'
 
@@ -72,7 +71,7 @@ const WishlistCard: FC<Props> = ({ item }) => {
           </Link>
         </h3>
         <div className="mb-4">
-          <HTMLContent html={product.description!} />
+          <Text html={product.description} />
         </div>
         <Button
           aria-label="Add to Cart"

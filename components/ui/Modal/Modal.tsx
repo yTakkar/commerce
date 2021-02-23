@@ -1,76 +1,65 @@
-import cn from 'classnames'
-import { FC, useRef } from 'react'
+import { FC, useRef, useEffect, useCallback } from 'react'
+import Portal from '@reach/portal'
 import s from './Modal.module.css'
-import { useDialog } from '@react-aria/dialog'
-import { FocusScope } from '@react-aria/focus'
-import { Transition } from '@headlessui/react'
-import { useOverlay, useModal, OverlayContainer } from '@react-aria/overlays'
 import { Cross } from '@components/icons'
+import {
+  disableBodyScroll,
+  enableBodyScroll,
+  clearAllBodyScrollLocks,
+} from 'body-scroll-lock'
+import FocusTrap from '@lib/focus-trap'
 interface Props {
   className?: string
   children?: any
   open?: boolean
   onClose: () => void
+  onEnter?: () => void | null
 }
 
-const Modal: FC<Props> = ({
-  className,
-  children,
-  open = false,
-  onClose,
-  ...props
-}) => {
-  const rootClassName = cn(s.root, className)
-  let ref = useRef() as React.MutableRefObject<HTMLInputElement>
-  let { modalProps } = useModal()
-  let { dialogProps } = useDialog({}, ref)
-  let { overlayProps } = useOverlay(
-    {
-      isOpen: open,
-      isDismissable: false,
-      onClose: onClose,
-      ...props,
+const Modal: FC<Props> = ({ children, open, onClose, onEnter = null }) => {
+  const ref = useRef() as React.MutableRefObject<HTMLDivElement>
+
+  const handleKey = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        return onClose()
+      }
     },
-    ref
+    [onClose]
   )
 
-  return (
-    <Transition show={open}>
-      <OverlayContainer>
-        <FocusScope contain restoreFocus autoFocus>
-          <div className={rootClassName}>
-            <Transition.Child
-              enter="transition-opacity ease-linear duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-100"
-              leave="transition-opacity ease-linear duration-300"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <div
-                className={s.modal}
-                {...overlayProps}
-                {...dialogProps}
-                {...modalProps}
-                ref={ref}
-              >
-                <div className="h-7 flex items-center justify-end w-full">
-                  <button
-                    onClick={() => onClose()}
-                    aria-label="Close panel"
-                    className="hover:text-gray-500 transition ease-in-out duration-150 focus:outline-none"
-                  >
-                    <Cross className="h-6 w-6" />
-                  </button>
-                </div>
+  useEffect(() => {
+    if (ref.current) {
+      if (open) {
+        disableBodyScroll(ref.current)
+        window.addEventListener('keydown', handleKey)
+      } else {
+        enableBodyScroll(ref.current)
+      }
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKey)
+      clearAllBodyScrollLocks()
+    }
+  }, [open, handleKey])
 
-                {children}
-              </div>
-            </Transition.Child>
+  return (
+    <Portal>
+      {open ? (
+        <div className={s.root}>
+          <div className={s.modal} role="dialog" ref={ref}>
+            <button
+              onClick={() => onClose()}
+              aria-label="Close panel"
+              className="hover:text-gray-500 transition ease-in-out duration-150 focus:outline-none absolute right-0 top-0 m-6"
+            >
+              <Cross className="h-6 w-6" />
+            </button>
+            <FocusTrap focusFirst>{children}</FocusTrap>
           </div>
-        </FocusScope>
-      </OverlayContainer>
-    </Transition>
+        </div>
+      ) : null}
+    </Portal>
   )
 }
 

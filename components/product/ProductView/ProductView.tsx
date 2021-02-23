@@ -6,11 +6,11 @@ import { NextSeo } from 'next-seo'
 import s from './ProductView.module.css'
 import { useUI } from '@components/ui/context'
 import { Swatch, ProductSlider } from '@components/product'
-import { Button, Container } from '@components/ui'
-import { HTMLContent } from '@components/core'
+import { Button, Container, Text } from '@components/ui'
 
-import useAddItem from '@bigcommerce/storefront-data-hooks/cart/use-add-item'
-import type { ProductNode } from '@bigcommerce/storefront-data-hooks/api/operations/get-product'
+import usePrice from '@framework/use-price'
+import useAddItem from '@framework/cart/use-add-item'
+import type { ProductNode } from '@framework/api/operations/get-product'
 import {
   getCurrentVariant,
   getProductOptions,
@@ -26,6 +26,11 @@ interface Props {
 
 const ProductView: FC<Props> = ({ product }) => {
   const addItem = useAddItem()
+  const { price } = usePrice({
+    amount: product.prices?.price?.value,
+    baseAmount: product.prices?.retailPrice?.value,
+    currencyCode: product.prices?.price?.currencyCode!,
+  })
   const { openSidebar } = useUI()
   const options = getProductOptions(product)
   const [loading, setLoading] = useState(false)
@@ -33,15 +38,14 @@ const ProductView: FC<Props> = ({ product }) => {
     size: null,
     color: null,
   })
-  const variant =
-    getCurrentVariant(product, choices) || product.variants.edges?.[0]
+  const variant = getCurrentVariant(product, choices)
 
   const addToCart = async () => {
     setLoading(true)
     try {
       await addItem({
         productId: product.entityId,
-        variantId: product.variants.edges?.[0]?.node.entityId!,
+        variantId: variant?.node.entityId!,
       })
       openSidebar()
       setLoading(false)
@@ -74,14 +78,14 @@ const ProductView: FC<Props> = ({ product }) => {
           <div className={s.nameBox}>
             <h1 className={s.name}>{product.name}</h1>
             <div className={s.price}>
-              {product.prices?.price.value}
+              {price}
               {` `}
               {product.prices?.price.currencyCode}
             </div>
           </div>
 
           <div className={s.sliderContainer}>
-            <ProductSlider>
+            <ProductSlider key={product.entityId}>
               {product.images.edges?.map((image, i) => (
                 <div key={image?.node.urlOriginal} className={s.imageContainer}>
                   <Image
@@ -131,7 +135,7 @@ const ProductView: FC<Props> = ({ product }) => {
             ))}
 
             <div className="pb-14 break-words w-full max-w-xl">
-              <HTMLContent html={product.description} />
+              <Text html={product.description} />
             </div>
           </section>
           <div>
@@ -151,7 +155,7 @@ const ProductView: FC<Props> = ({ product }) => {
         <WishlistButton
           className={s.wishlistButton}
           productId={product.entityId}
-          variant={product.variants.edges?.[0]!}
+          variant={variant!}
         />
       </div>
     </Container>

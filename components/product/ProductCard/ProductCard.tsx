@@ -1,11 +1,12 @@
-import type { FC } from 'react'
 import cn from 'classnames'
 import Link from 'next/link'
-import type { ProductNode } from '@bigcommerce/storefront-data-hooks/api/operations/get-all-products'
-import usePrice from '@bigcommerce/storefront-data-hooks/use-price'
-import { EnhancedImage } from '@components/core'
+import Image from 'next/image'
+import type { FC } from 'react'
 import s from './ProductCard.module.css'
 import WishlistButton from '@components/wishlist/WishlistButton'
+
+import usePrice from '@framework/use-price'
+import type { ProductNode } from '@framework/api/operations/get-all-products'
 
 interface Props {
   className?: string
@@ -13,7 +14,10 @@ interface Props {
   variant?: 'slim' | 'simple'
   imgWidth: number | string
   imgHeight: number | string
-  priority?: boolean
+  imgLayout?: 'fixed' | 'intrinsic' | 'responsive' | undefined
+  imgPriority?: boolean
+  imgLoading?: 'eager' | 'lazy'
+  imgSizes?: string
 }
 
 const ProductCard: FC<Props> = ({
@@ -22,9 +26,13 @@ const ProductCard: FC<Props> = ({
   variant,
   imgWidth,
   imgHeight,
-  priority,
+  imgPriority,
+  imgLoading,
+  imgSizes,
+  imgLayout = 'responsive',
 }) => {
   const src = p.images.edges?.[0]?.node?.urlOriginal!
+  const placeholderImg = '/product-img-placeholder.svg';
   const { price } = usePrice({
     amount: p.prices?.price?.value,
     baseAmount: p.prices?.retailPrice?.value,
@@ -43,13 +51,16 @@ const ProductCard: FC<Props> = ({
                 {p.name}
               </span>
             </div>
-            <EnhancedImage
-              src={p.images.edges?.[0]?.node.urlOriginal!}
-              alt={p.images.edges?.[0]?.node.altText || 'Product Image'}
-              width={imgWidth}
-              height={imgHeight}
-              priority={priority}
+            <Image
               quality="85"
+              width={imgWidth}
+              sizes={imgSizes}
+              height={imgHeight}
+              layout={imgLayout}
+              loading={imgLoading}
+              priority={imgPriority}
+              src={p.images.edges?.[0]?.node.urlOriginal! || placeholderImg}
+              alt={p.images.edges?.[0]?.node.altText || 'Product Image'}
             />
           </div>
         ) : (
@@ -69,14 +80,17 @@ const ProductCard: FC<Props> = ({
               />
             </div>
             <div className={s.imageContainer}>
-              <EnhancedImage
-                alt={p.name}
-                className={cn('w-full object-cover', s['product-image'])}
-                src={src}
-                width={imgWidth}
-                height={imgHeight}
-                priority={priority}
+              <Image
                 quality="85"
+                src={src || placeholderImg}
+                alt={p.name}
+                className={s.productImage}
+                width={imgWidth}
+                sizes={imgSizes}
+                height={imgHeight}
+                layout={imgLayout}
+                loading={imgLoading}
+                priority={imgPriority}
               />
             </div>
           </>

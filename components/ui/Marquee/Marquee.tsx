@@ -9,7 +9,11 @@ interface Props {
   variant?: 'primary' | 'secondary'
 }
 
-const M: FC<Props> = ({ className = '', children, variant = 'primary' }) => {
+const Marquee: FC<Props> = ({
+  className = '',
+  children,
+  variant = 'primary',
+}) => {
   const rootClassName = cn(
     s.root,
     {
@@ -22,10 +26,10 @@ const M: FC<Props> = ({ className = '', children, variant = 'primary' }) => {
   return (
     <div className={rootClassName}>
       <Ticker offset={80}>
-        {({ index }) => <div className={s.container}>{children}</div>}
+        {() => <div className={s.container}>{children}</div>}
       </Ticker>
     </div>
   )
 }
 
-export default M
+export default Marquee

@@ -4,12 +4,15 @@ import type {
   InferGetStaticPropsType,
 } from 'next'
 import { useRouter } from 'next/router'
-import { getConfig } from '@bigcommerce/storefront-data-hooks/api'
-import getAllPages from '@bigcommerce/storefront-data-hooks/api/operations/get-all-pages'
-import getProduct from '@bigcommerce/storefront-data-hooks/api/operations/get-product'
-import { Layout } from '@components/core'
+import { Layout } from '@components/common'
 import { ProductView } from '@components/product'
-import getAllProductPaths from '@bigcommerce/storefront-data-hooks/api/operations/get-all-product-paths'
+
+// Data
+
+import { getConfig } from '@framework/api'
+import getProduct from '@framework/api/operations/get-product'
+import getAllPages from '@framework/api/operations/get-all-pages'
+import getAllProductPaths from '@framework/api/operations/get-all-product-paths'
 
 export async function getStaticProps({
   params,
@@ -48,8 +51,7 @@ export async function getStaticPaths({ locales }: GetStaticPathsContext) {
           return arr
         }, [])
       : products.map((product) => `/product${product.node.path}`),
-    // If your store has tons of products, enable fallback mode to improve build times!
-    fallback: false,
+    fallback: 'blocking',
   }
 }
 
